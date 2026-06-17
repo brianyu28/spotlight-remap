@@ -12,9 +12,8 @@ def tap_key(keycode, flags=0):
     """
     down = Quartz.CGEventCreateKeyboardEvent(_event_source, keycode, True)
     up = Quartz.CGEventCreateKeyboardEvent(_event_source, keycode, False)
-    if flags:
-        Quartz.CGEventSetFlags(down, flags)  # attach Cmd/Shift/etc.
-        Quartz.CGEventSetFlags(up, flags)
+    Quartz.CGEventSetFlags(down, flags)  # explicitly set (or clear) modifiers
+    Quartz.CGEventSetFlags(up, flags)
 
     # kCGHIDEventTap injects at the lowest point, so every app sees it.
     Quartz.CGEventPost(Quartz.kCGHIDEventTap, down)

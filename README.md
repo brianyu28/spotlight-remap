@@ -32,22 +32,31 @@ background), or else it will intercept these events. Check Activity Monitor or
 System Settings's App Background Activity to verify that Logi Options+ isn't
 running in the background.
 
+### Other Usage
+
 When the program terminates normally, controls should automatically be
 un-diverted. In the event of that this does not happen, you can run the
 following command to restore diverting statuses to default state:
 
 ```bash
-sudo uv run main.py restore
+sudo uv run src/main.py restore
 ```
 
 To learn the Control ID (CID) for a particular device input, run:
 
 ```bash
-sudo uv run main.py learn
+sudo uv run src/main.py learn
 ```
 
 Then provide the device input (e.g. button press) you want to learn and observe
 the CID output.
+
+This program assumes Bluetooth device index by default, not a USB slot. If using
+USB, to learn which device index corresponds to your Spotlight 2, run:
+
+```bash
+sudo uv run src/main.py device
+```
 
 ## How It Works
 

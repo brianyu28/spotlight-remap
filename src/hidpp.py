@@ -15,19 +15,53 @@ def get_logitech_device_handle():
     Find the Logitech vendor-defined HID interface and open it, returning its
     device handle. We identify by vendor ID + a vendor-defined usage page (>= 0xff00).
 
+    When multiple vendor interfaces exist (e.g. Unifying receiver with separate
+    in/out interfaces), we probe each one with a HID++ ping and return the first
+    that responds.
+
     Opening raw HID on macOS needs elevated rights (run with sudo) and Input
     Monitoring permission.
     """
-    for device in hid.enumerate(VID):
-        if device["usage_page"] >= 0xFF00:  # vendor-defined page = HID++ here
-            handle = hid.device()
+    candidates = [d for d in hid.enumerate(VID) if d["usage_page"] >= 0xFF00]
+    if not candidates:
+        sys.exit(
+            "No vendor (0xff..) HID interface found. Check that this program was "
+            "run with sudo and that the remote is paired and active."
+        )
+
+    swfunc = SW  # func_idx=0 → (0 << 4) | SW
+    ping = [0x11, DEV, 0x00, swfunc, REPROG >> 8, REPROG & 0xFF, 0] + [0] * 13
+    end_per_iface = 0.3  # seconds to wait per candidate
+
+    for device in candidates:
+        handle = hid.device()
+        try:
             handle.open_path(device["path"])
-            handle.set_nonblocking(1)  # read() returns [] when idle
-            return handle
-    sys.exit(
-        "No vendor (0xff..) HID interface found. Check that this program was "
-        "run with sudo and that the remote is paired and active."
-    )
+        except OSError:
+            continue
+        handle.set_nonblocking(1)
+        try:
+            handle.write(ping)
+        except OSError:
+            handle.close()
+            continue
+        deadline = time.time() + end_per_iface
+        while time.time() < deadline:
+            data = handle.read(64)
+            if not data:
+                time.sleep(0.005)
+                continue
+            if len(data) >= 4 and data[2] == 0x00 and data[3] == swfunc:
+                return handle  # this interface does two-way HID++
+            if len(data) >= 5 and data[2] == 0x8F:
+                return handle  # got an error response — still bidirectional
+        handle.close()
+
+    # No interface responded — fall back to the first candidate (Bluetooth path)
+    handle = hid.device()
+    handle.open_path(candidates[0]["path"])
+    handle.set_nonblocking(1)
+    return handle
 
 
 def request_hidpp(handle, feat_idx, func_idx, params=(), timeout=1.0):
@@ -45,14 +79,56 @@ def request_hidpp(handle, feat_idx, func_idx, params=(), timeout=1.0):
     buf += [0] * (20 - len(buf))  # long reports are 20 bytes
     handle.write(buf)
     end = time.time() + timeout
+    received = []
     while time.time() < end:
         data = handle.read(64)
         if not data:
             time.sleep(0.005)
             continue
+        received.append(data)
+        # HID++ error response: byte 2 == 0x8F, byte 3 == feat_idx, byte 4 == swfunc
+        if (
+            len(data) >= 5
+            and data[2] == 0x8F
+            and data[3] == feat_idx
+            and data[4] == swfunc
+        ):
+            raise RuntimeError(
+                f"HID++ error 0x{data[5]:02X} for feat=0x{feat_idx:02X} func=0x{func_idx:02X}"
+            )
         if len(data) >= 4 and data[2] == feat_idx and data[3] == swfunc:
             return data
-    raise TimeoutError("no HID++ response")
+    hint = ""
+    if received:
+        hint = f"\nPackets received (none matched): {[bytes(d[:8]).hex() for d in received]}"
+    raise TimeoutError(f"no HID++ response{hint}")
+
+
+def detect_device_index(handle):
+    """
+    Detect the HID++ device index by listening for any button press.
+
+    For Bluetooth the index is always 0xFF. For a USB Unifying/Bolt receiver
+    each paired device gets its own slot (0x01-0x06); byte 1 of every HID
+    report carries that slot number, so we just need to capture one report
+    from the user pressing any button.
+    """
+    print("Press any button on the Spotlight remote...")
+    handle.set_nonblocking(0)  # switch to blocking so read() waits
+    deadline = time.time() + 15.0
+    while time.time() < deadline:
+        data = handle.read(64)
+        if data and len(data) >= 2 and data[1] != 0:
+            dev_index = data[1]
+            print(f"Device index: 0x{dev_index:02X}")
+            if dev_index == 0xFF:
+                print("(Bluetooth connection — DEV = 0xFF is already correct)")
+            else:
+                print(
+                    f"USB receiver detected. Set DEV = 0x{dev_index:02X} in src/constants.py"
+                )
+            return dev_index
+    sys.exit("Timed out waiting for a button press.")
 
 
 def get_reprogrammable_controls_index(handle):

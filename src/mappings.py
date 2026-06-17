@@ -18,7 +18,8 @@ ON_PRESS = {
     SPOTLIGHT_CIDS["LEFT_SHORT"]: (KEY["left"], MOD["none"]),
     # Custom mappings, map other buttons to different keys with modifiers.
     # Make changes to any of these to customize behavior.
-    SPOTLIGHT_CIDS["LEFT_LONG"]: (KEY["c"], MOD["opt"]),
+    SPOTLIGHT_CIDS["LEFT_LONG"]: (KEY["left"], MOD["shift"]),
+    SPOTLIGHT_CIDS["RIGHT_LONG"]: (KEY["right"], MOD["shift"]),
     SPOTLIGHT_CIDS["ACTION_SHORT"]: (KEY["q"], MOD["opt"]),
     SPOTLIGHT_CIDS["ACTION_DOUBLE"]: (KEY["b"], MOD["opt"]),
 }
