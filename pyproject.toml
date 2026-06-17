@@ -8,3 +8,13 @@ dependencies = [
     "hidapi",
     "pyobjc-framework-Quartz",
 ]
+
+[project.scripts]
+spotlight-remap = "src.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]

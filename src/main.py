@@ -16,7 +16,3 @@ def main():
         restore(handle, idx)
     else:
         remap(handle, idx)
-
-
-if __name__ == "__main__":
-    main()

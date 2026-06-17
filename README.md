@@ -1,6 +1,6 @@
 # Spotlight Remap
 
-Remaps the buttons on a Spotlight 2 presentation remote to custom key
+Remaps the buttons on a Logitech Spotlight 2 presentation remote to custom key
 combinations on macOS.
 
 Logi Options+ by default only allows some button actions to be mapped to custom
@@ -20,6 +20,11 @@ Your terminal (e.g. Terminal, iTerm) and your Python process (e.g. `python3.14`,
 likely located in a subdirectory of `.local/share/uv/python/` if using `uv`)
 must have "Input Monitoring" permissions in System Settings -> Privacy &
 Security -> Input Monitoring.
+
+Additionally, Logi Options+ must not be running (either actively or in the
+background), or else it will intercept these events. Check Activity Monitor or
+System Settings's App Background Activity to verify that Logi Options+ isn't
+running in the background.
 
 When the program terminates normally, controls should automatically be
 un-diverted. In the event of that this does not happen, you can run the
