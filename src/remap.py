@@ -2,9 +2,9 @@ import signal
 import sys
 import time
 
+from src.actions import perform
 from src.constants import DOUBLE_GAP, HOLD_THRESHOLD
 from src.hidpp import pressed_set, set_divert
-from src.keystroke import tap_key
 from src.mappings import GESTURES, ON_PRESS
 
 # Whether to print information about each key press or gesture
@@ -46,8 +46,8 @@ def remap(handle, idx):
         binding = GESTURES.get(cid, {}).get(gesture)
         if VERBOSE:
             print(f"  CID 0x{cid:04x} -> {gesture}")
-        if binding:
-            tap_key(*binding)
+        if binding is not None:
+            perform(binding)
 
     prev = set()
     while True:
@@ -62,7 +62,7 @@ def remap(handle, idx):
                     if cid in ON_PRESS:  # firmware gesture: go
                         if VERBOSE:
                             print(f"  CID 0x{cid:04x} -> on_press")
-                        tap_key(*ON_PRESS[cid])
+                        perform(ON_PRESS[cid])
                     if cid in gestures:  # start gesture timing
                         gesture_state = gestures[cid]
                         gesture_state["down"] = True
