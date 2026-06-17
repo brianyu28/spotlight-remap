@@ -16,6 +16,12 @@ Using `uv`:
 sudo uv run main.py
 ```
 
+Or install as a tool first with `uv tool install .` and run as:
+
+```bash
+sudo spotlight-remap
+```
+
 Your terminal (e.g. Terminal, iTerm) and your Python process (e.g. `python3.14`,
 likely located in a subdirectory of `.local/share/uv/python/` if using `uv`)
 must have "Input Monitoring" permissions in System Settings -> Privacy &
