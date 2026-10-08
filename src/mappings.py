@@ -40,6 +40,8 @@ ON_PRESS = {
     SPOTLIGHT_CIDS["LEFT_LONG"]: key("left", "shift"),
     SPOTLIGHT_CIDS["RIGHT_LONG"]: key("right", "shift"),
     SPOTLIGHT_CIDS["CENTER_SHORT"]: call(example),
+    SPOTLIGHT_CIDS["ACTION_SHORT"]: [key("g"), key("q"), key("return")],
+    SPOTLIGHT_CIDS["ACTION_DOUBLE"]: [key("g"), key("b"), key("return")],
 }
 
 GESTURES = {}
